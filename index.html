@@ -1,13 +1,182 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
-<title>AngularJS</title>
-<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.5/angular.min.js"></script>
-<script type="text/javascript" src="src/script.js"></script>
+
+ <meta charset="utf-8">
+
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+
+ <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+ <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+ <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+ <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+
+ 
+
 </head>
-<body ng-app="app">
-	<div ng-controller="HelloController">
-		<h2>{{message}}</h2>
-	</div>
+
+<br/>
+
+<br/>
+
+<div class="container">
+
+
+
+<div ng-app="myApp" ng-controller="formCtrl">
+
+  <form novalidate class="form-group">
+
+    Name : <br>
+
+    <input type="text" class="form-control" ng-model="user.firstName"><br>
+
+    <br>
+
+    You are a :
+
+ <input type="radio" ng-disabled="Organizer.length > 0" class="radio-inline" ng-model="user.role" value="Organizer">Organizer
+
+ <input type="radio" class="radio-inline" ng-model="user.role" value="Gamer">Gamer
+
+    <br><br>
+
+    <button class="form-control" ng-show='Organizer.length > 0' ng-click="submit()">Submit</button>
+
+ <button class="form-control" ng-hide='Organizer.length > 0' ng-click="submit()">Submit</button>
+
+  </form>
+
+ 
+
+  <br />
+
+  <br />
+
+  <br />
+
+ 
+
+ <table class="table table-striped">
+
+    <thead>
+
+      <tr>
+
+        <th>Name</th>
+
+        <th>Score</th>
+
+      </tr>
+
+    </thead>
+
+    <tbody>
+
+      <tr ng-repeat="(key, val) in players">
+
+        <td>{{ key }}</td>
+
+        <td>{{ val }}</td>
+
+      </tr>
+
+    </tbody>
+
+  </table>
+
+  <br/>
+
+  <div>Organizer is {{Organizer}}</div>
+
+</div>
+
+
+
+<script>
+
+var app = angular.module('myApp', []);
+
+app.controller('formCtrl', function($scope, $http) {
+
+ $scope.user ={};
+
+ $scope.Organizer ='';
+
+ $scope.players ={};
+
+    $scope.submit = function() {
+
+        $http.post('http://localhost:3000/initGame', $scope.user)
+
+   .then(
+
+       function(response){
+
+         // success callback
+
+   console.log(response)
+
+         //$scope.user.role=(response.data.organizer == $scope.user.firstName)? 'Organizer' : 'Gamer';
+
+   $scope.players = response.data.players;
+
+   $scope.Organizer=response.data.organizer;
+
+       },
+
+       function(response){
+
+         // failure callback
+
+   console.log(response)
+
+       }
+
+    );
+
+    };
+
+ $scope.init = function() {
+
+        $http.get('http://localhost:3000/')
+
+   .then(
+
+       function(response){
+
+         $scope.players = response.data.players;
+
+   $scope.Organizer=response.data.organizer;
+
+       },
+
+       function(response){
+
+         // failure callback
+
+   console.log(response)
+
+       }
+
+    );
+
+    };
+
+ $scope.init();
+
+});
+
+</script>
+
+
+
 </body>
+
 </html>
+
