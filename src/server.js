@@ -18,27 +18,45 @@ app.use(function(req, res, next) {
 
 });
 
-
-
+//Few default values
 var isGameStarted = true;
-
-var organizer=''
-
+var organizer='';
 var isWinner = false;
+var archive={};
 
-var players={}
-
-players['Piyush']=1;
-
-
+var games = {
+	"Piyush_127.0.0.1_now" : {
+		organizer : "Piyush",
+		timeout : "-1", //sec
+		ip: "127.0.0.1",
+		started: 'now',//"time",
+		players : {
+			Piyush : '1'
+		},
+		questions: {
+			1: 'Piyush'
+		}
+	}
+}
 
 app.get('/', function(req, res) {
-
- res.json({'organizer': organizer, 'players':players})
-
+	res.json(games)
 })
 
+app.post('/joinGame/:gameId/:playerId', function(req, res) {
+	console.log(req.params.gameId);
+	console.log(req.params.playerId);
+	games[req.params.gameId].players[req.params.playerId]=0;
+})
 
+app.post('/startGame/:organizer', function(req, res) {
+	console.log(req.params.organizer);
+	var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+	console.log(ip);
+	var gameKey=req.params.organizer + "_"+ ip + "_"+Date.now()
+	games[gameKey]={};
+	games[gameKey].organizer=req.params.organizer;
+})
 
 app.get('/startGame', function (req, res) {
 
