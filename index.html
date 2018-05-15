@@ -1,184 +1,160 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
- <meta charset="utf-8">
-
- <meta name="viewport" content="width=device-width, initial-scale=1">
-
- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-
- <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-
- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-
- <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
-
- 
-
+  <title>Bootstrap Example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script>
+$(document).ready(function(){
+	var myGames={};
+	var myGameId='';
+	var myName='';
+	var players={};
+	var myQuestionId='';
+	$("#startQuiz").hide();
+    $("#stopGame").hide();
+	$('#scoreBoard').hide();
+	$('#hitBuzzer').hide();
+	$('#questionCountdown').hide();
+    $("#startGame").click(function(){
+		myName=$('#myName').val();
+		if (myName.length < 1){
+			alert("Name can not be blank");
+			return ;
+		}
+		console.log(myName);
+    	$("#startGame").hide();
+        $("#startQuiz").show();
+        $("#stopGame").show();
+		$.post("http://localhost:3000/startGame/"+myName, function(data){
+			console.log('msg posted');
+		});
+    });
+    $("#startQuiz").click(function(){
+        $("#startGame").hide();
+		$('#questionCountdown').show();
+		setTimer();
+    });
+	if($('#1a').hasClass('active')){
+    	$("#stopGame").hide();
+    };
+	$.get("http://localhost:3000/", function(data){
+		myGames=data;
+		$.each(data, function(key, value) {
+			$("#gameList").append("<li class='list-group-item'><button id='"+key
+				+"' class='btn btn-primary btn-block games'>" + value.organizer 
+				//+ "_" + value.started 
+				+"</button></li>");
+				myGameId=key;
+				players = value.players;
+		});
+		document.querySelectorAll('.games')
+			.forEach(input => 
+					input.addEventListener('click', joinGame)
+			);
+		
+	});
+	function joinGame(event) {
+		myName=$('#myName').val();
+		if (myName.length < 1){
+			alert("Name can not be blank");
+			return ;
+		}
+		$("#playersList").append("<tr><td>" + myName+"</td><td>0</td></tr>");
+		$('#gameList').hide();
+		$('#scoreBoard').show();
+		$('#hitBuzzer').show();
+		$.each(players, function(key, value) {
+			$("#playersList").append("<tr><td>" + key+"</td><td>"+value+"</td></tr>");
+		});
+		$.post("http://localhost:3000/joinGame/"+myGameId+"/"+myName, function(data){
+			console.log('msg posted');
+		});
+	}
+	$('a[data-toggle=tab]').click(function(){
+		console.log(this.id);
+		if (this.id==="joinGameTab"){
+			console.log('Restore startGameTab');
+		} else {
+			console.log('Restore joinGameTab');
+			$("#joinGameTab").addClass('disabled');
+			$('#gameList').show();
+			$('#scoreBoard').hide();
+			$('#hitBuzzer').hide();
+		}
+	});	
+	
+});
+var distance = 20;
+// Update the count down every 1 second
+function setTimer(){
+	var x = setInterval(function() {
+		// Output the result in an element with id="demo"
+		document.getElementById("demo").innerHTML = distance-- + "s"  ;
+		// If the count down is over, write some text 
+		if (distance < 0) {
+			clearInterval(x);
+			document.getElementById("demo").innerHTML = "Time Up!!";
+		}
+	}, 1000);
+}
+</script>
+<style>
+.timer {
+    padding: 50px;
+	text-align: center;
+	margin: 10px;
+    border: 1px solid #4CAF50;
+}
+</style>
 </head>
-
-<br/>
-
-<br/>
+<body>
 
 <div class="container">
-
-
-
-<div ng-app="myApp" ng-controller="formCtrl">
-
-  <form novalidate class="form-group">
-
-    Name : <br>
-
-    <input type="text" class="form-control" ng-model="user.firstName"><br>
-
-    <br>
-
-    You are a :
-
- <input type="radio" ng-disabled="Organizer.length > 0" class="radio-inline" ng-model="user.role" value="Organizer">Organizer
-
- <input type="radio" class="radio-inline" ng-model="user.role" value="Player">Player
-
-    <br><br>
-
-    <button class="form-control" ng-show='Organizer.length > 0' ng-click="submit()">Submit</button>
-
- <button class="form-control" ng-hide='Organizer.length > 0' ng-click="submit()">Submit</button>
-
+  <h3>Tabs</h3>
+  <form class="form-inline" >
+	  <div class="form-group">
+		<label for="myName">Name :</label>
+		<input type="text" class="form-control" id="myName" required>
+	  </div>
   </form>
-
- 
-
-  <br />
-
-  <br />
-
-  <br />
-
- 
-
- <table class="table table-striped">
-
+  <ul class="nav nav-tabs" role="tablist" id="allTabs">
+    <li class="active col-xs-6"><a href="#1a" data-toggle="tab" id="joinGameTab">Join Game</a></li>
+    <li class="disabled col-xs-6"><a href="#2a" data-toggle="tab"  id="startGameTab">Start Game</a></li>
+  </ul>
+  <br>
+  <div class="tab-content clearfix">
+  	<div class="tab-pane active" id="1a">
+		<ul class="list-group" id="gameList">
+			<!--li class='list-group-item'><button id='a' class='btn btn-primary btn-block'>A</button></li-->
+		</ul>
+		<button id="hitBuzzer" type="button" class="btn btn-primary btn-block">Buzzer</button>
+	</div>
+  	<div class="tab-pane" id="2a">
+    	<button id="startGame" type="button" class="btn btn-primary btn-block">Start Game</button>
+        <button id="startQuiz" type="button" class="btn btn-primary btn-block">Start Quiz</button>
+		<button id="stopGame" type="button" class="btn btn-danger btn-block navbar-fixed-bottom">Stop Game</button>
+		<div id="questionCountdown" class="timer"><p id="demo"></p> 
+		</div>
+	</div>
+	
+	<table class="table table-striped" id="scoreBoard">
     <thead>
-
       <tr>
-
         <th>Name</th>
-
         <th>Score</th>
-
       </tr>
-
     </thead>
-
-    <tbody>
-
-      <tr ng-repeat="(key, val) in players">
-
-        <td>{{ key }}</td>
-
-        <td>{{ val }}</td>
-
-      </tr>
-
+    <tbody id="playersList">
     </tbody>
-
-  </table>
-
-  <br/>
-
-  <div>Organizer is {{Organizer}}</div>
-
+	</table>
+  </div>
+  
+  
 </div>
 
-
-
-<script>
-
-var app = angular.module('myApp', []);
-
-app.controller('formCtrl', function($scope, $http) {
-
- $scope.user ={};
-
- $scope.Organizer ='';
-
- $scope.players ={};
- 
- var url = 'https://sleepy-headland-26434.herokuapp.com/' //'http://localhost:3000/'
-
-    $scope.submit = function() {
-
-        $http.post(url + 'initGame', $scope.user)
-
-   .then(
-
-       function(response){
-
-         // success callback
-
-   console.log(response)
-
-         //$scope.user.role=(response.data.organizer == $scope.user.firstName)? 'Organizer' : 'Player';
-
-   $scope.players = response.data.players;
-
-   $scope.Organizer=response.data.organizer;
-
-       },
-
-       function(response){
-
-         // failure callback
-
-   console.log(response)
-
-       }
-
-    );
-
-    };
-
- $scope.init = function() {
-
-        $http.get(url)
-
-   .then(
-
-       function(response){
-
-         $scope.players = response.data.players;
-
-   $scope.Organizer=response.data.organizer;
-
-       },
-
-       function(response){
-
-         // failure callback
-
-   console.log(response)
-
-       }
-
-    );
-
-    };
-
- $scope.init();
-
-});
-
-</script>
-
-
-
 </body>
-
 </html>
-
