@@ -25,7 +25,7 @@ var isWinner = false;
 var archive={};
 
 var games = {
-	"Piyush_127.0.0.1_now" : {
+	"Piyush_::1" : {
 		organizer : "Piyush",
 		timeout : "-1", //sec
 		ip: "127.0.0.1",
@@ -53,32 +53,33 @@ app.post('/startGame/:organizer', function(req, res) {
 	console.log(req.params.organizer);
 	var ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 	console.log(ip);
-	var gameKey=req.params.organizer + "_"+ ip + "_"+Date.now()
+	var gameKey=req.params.organizer + "_"+ ip;
 	games[gameKey]={};
 	games[gameKey].organizer=req.params.organizer;
+	games[gameKey].players={};
+	games[gameKey].questions={};
+	var thisGameObject={};
+	thisGameObject[gameKey]=games[gameKey];
+	res.json(thisGameObject);
 })
 
-app.get('/startGame', function (req, res) {
-
- isGameStarted = true;
-
- res.send('Game Started!');
-
+app.post('/hitBuzzer/:gameId/:playerId/:questionId', function (req, res) {
+	games[req.params.gameId].questions[req.params.questionId]=req.params.playerId;
+	games[req.params.gameId].players[req.params.playerId]=games[req.params.gameId].players[req.params.playerId]+1;
+	res.json(games)
 })
 
-
-
-app.get('/hitBuzzer', function (req, res) {
-
- isWinner = isGameStarted;
-
- isGameStarted = false;
-
- res.send(isWinner)
-
+app.post('/startQuiz/:gameId', function (req, res) {
+	games[req.params.gameId].questions[Object.keys(games[req.params.gameId].questions).length]="";
+	res.json(games[req.params.gameId].players);
+})
+app.post('/stopGame/:gameId', function (req, res) {
+	delete games[req.params.gameId];
+	//games[req.params.gameId].questions[Object.keys(games[req.params.gameId].questions).length]="";
+	res.json(games);
 })
 
-
+//
 
 app.post('/initGame',function(req,res){
 
