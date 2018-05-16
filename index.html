@@ -11,36 +11,46 @@
 $(document).ready(function(){
 	var myGames={};
 	var myGameId='';
+	var thisGame={};
 	var myName='';
 	var players={};
+	var questions={};
 	var myQuestionId='';
-	$("#startQuiz").hide();
-    $("#stopGame").hide();
 	$('#scoreBoard').hide();
 	$('#hitBuzzer').hide();
-	$('#questionCountdown').hide();
-    $("#startGame").click(function(){
+	$("#1a").hide();
+	$("#2a").hide();
+	$("#joinGame").click(function(){
 		myName=$('#myName').val();
 		if (myName.length < 1){
 			alert("Name can not be blank");
 			return ;
 		}
-		console.log(myName);
-    	$("#startGame").hide();
-        $("#startQuiz").show();
-        $("#stopGame").show();
+		$("#name").text(myName);// + "<br>Player<br>";
+		$("#role").text("Player");
+		//debugger;
+		$("#input").hide();
+		$("#options").hide();
+		$("#1a").show();
+	});
+	$("#startGame").click(function(){
+		myName=$('#myName').val();
+		if (myName.length < 1){
+			alert("Name can not be blank");
+			return ;
+		}
+		$("#name").text(myName);// + "<br>Player<br>";
+		$("#role").text("Player");
+		//debugger;
+		$("#input").hide();
+		$("#options").hide();
+		$("#2a").show();
 		$.post("http://localhost:3000/startGame/"+myName, function(data){
-			console.log('msg posted');
+			thisGame=data;
+			console.log(thisGame);			
 		});
-    });
-    $("#startQuiz").click(function(){
-        $("#startGame").hide();
-		$('#questionCountdown').show();
-		setTimer();
-    });
-	if($('#1a').hasClass('active')){
-    	$("#stopGame").hide();
-    };
+	});
+    //debugger;	
 	$.get("http://localhost:3000/", function(data){
 		myGames=data;
 		$.each(data, function(key, value) {
@@ -50,6 +60,7 @@ $(document).ready(function(){
 				+"</button></li>");
 				myGameId=key;
 				players = value.players;
+				questions = value.questions;
 		});
 		document.querySelectorAll('.games')
 			.forEach(input => 
@@ -57,37 +68,52 @@ $(document).ready(function(){
 			);
 		
 	});
-	function joinGame(event) {
-		myName=$('#myName').val();
-		if (myName.length < 1){
-			alert("Name can not be blank");
-			return ;
-		}
-		$("#playersList").append("<tr><td>" + myName+"</td><td>0</td></tr>");
-		$('#gameList').hide();
-		$('#scoreBoard').show();
-		$('#hitBuzzer').show();
+	function refreshScoreBoard() {
+		$("#playersList").empty();
+		$("#playersList2").empty();
+		console.log("in refresh scoreboard");
+		console.log(players);
 		$.each(players, function(key, value) {
 			$("#playersList").append("<tr><td>" + key+"</td><td>"+value+"</td></tr>");
 		});
+		$.each(players, function(key, value) {
+			$("#playersList2").append("<tr><td>" + key+"</td><td>"+value+"</td></tr>");
+		});
+	}
+	function joinGame(event) {
+		$("#playersList").append("<tr><td>" + myName+"</td><td>0</td></tr>");
+		$('#scoreBoard').show();
+		$('#hitBuzzer').show();
+		$('#gameList').hide();
+		refreshScoreBoard();
 		$.post("http://localhost:3000/joinGame/"+myGameId+"/"+myName, function(data){
 			console.log('msg posted');
 		});
 	}
-	$('a[data-toggle=tab]').click(function(){
-		console.log(this.id);
-		if (this.id==="joinGameTab"){
-			console.log('Restore startGameTab');
-		} else {
-			console.log('Restore joinGameTab');
-			$("#joinGameTab").addClass('disabled');
-			$('#gameList').show();
-			$('#scoreBoard').hide();
-			$('#hitBuzzer').hide();
-		}
-	});	
+	$("#hitBuzzer").click(function(){
+		
+		$.post("http://localhost:3000/hitBuzzer/"+myGameId+"/"+myName+"/"+Object.keys(questions).length, function(data){
+			console.log('refresh data');
+			myGames=data;
+			$.each(data, function(key, value) {
+				players = value.players;
+				questions = value.questions;
+			});
+			refreshScoreBoard();
+		});
+	});
+	$("#startQuiz").click(function(){
+		setTimer();
+		$.post("http://localhost:3000/startQuiz/"+Object.keys(thisGame)[0], function(data){
+			players = data;
+			refreshScoreBoard();
+		});
+	});
+	
 	
 });
+
+//Other Global functions
 var distance = 20;
 // Update the count down every 1 second
 function setTimer(){
@@ -104,53 +130,70 @@ function setTimer(){
 </script>
 <style>
 .timer {
-    padding: 50px;
+    padding: 30px;
 	text-align: center;
 	margin: 10px;
-    border: 1px solid #4CAF50;
 }
 </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container col-xs-12">
   <h3>Tabs</h3>
-  <form class="form-inline" >
-	  <div class="form-group">
+  <div class="row col-xs-12">
+	  <div id="input" class="form-group col-xs-12">
 		<label for="myName">Name :</label>
 		<input type="text" class="form-control" id="myName" required>
 	  </div>
-  </form>
-  <ul class="nav nav-tabs" role="tablist" id="allTabs">
-    <li class="active col-xs-6"><a href="#1a" data-toggle="tab" id="joinGameTab">Join Game</a></li>
-    <li class="disabled col-xs-6"><a href="#2a" data-toggle="tab"  id="startGameTab">Start Game</a></li>
-  </ul>
-  <br>
-  <div class="tab-content clearfix">
-  	<div class="tab-pane active" id="1a">
+	  <div id="output" style="text-align: right; float:right">
+		<br>
+		<div id="name"></div>
+		<div id="role"></div>
+		<br>
+	  </div>
+	  <div id="options" class="form-group col-xs-12">
+		<button id="joinGame" name="button" class="btn btn-primary col-xs-6">Join Game</button>
+        <button id="startGame" name="button" class="btn btn-primary col-xs-6">Start Game</button>
+      </div>
+  </div>
+  
+  <div class="row col-xs-12">
+  	<div id="1a">
 		<ul class="list-group" id="gameList">
 			<!--li class='list-group-item'><button id='a' class='btn btn-primary btn-block'>A</button></li-->
 		</ul>
-		<button id="hitBuzzer" type="button" class="btn btn-primary btn-block">Buzzer</button>
+		
+			<table class="table table-striped" id="scoreBoard">
+				<thead>
+				  <tr>
+					<th>Name</th>
+					<th>Score</th>
+				  </tr>
+				</thead>
+				<tbody id="playersList">
+				</tbody>
+			</table>
+			<button id="hitBuzzer" type="button" class="btn btn-primary btn-block">Buzzer</button>
+		
 	</div>
-  	<div class="tab-pane" id="2a">
-    	<button id="startGame" type="button" class="btn btn-primary btn-block">Start Game</button>
-        <button id="startQuiz" type="button" class="btn btn-primary btn-block">Start Quiz</button>
-		<button id="stopGame" type="button" class="btn btn-danger btn-block navbar-fixed-bottom">Stop Game</button>
-		<div id="questionCountdown" class="timer"><p id="demo"></p> 
-		</div>
+  	<div id="2a">
+    	<button id="startQuiz" type="button" class="btn btn-primary btn-block">Start Quiz</button>
+		<div id="questionCountdown" class="timer"><p id="demo"></p></div>
+		<table class="table table-striped" id="scoreBoard2">
+				<thead>
+				  <tr>
+					<th>Name</th>
+					<th>Score</th>
+				  </tr>
+				</thead>
+				<tbody id="playersList2">
+				</tbody>
+			</table>
+			<div id="forPadding" class="timer"></p></div>
+		<button id="stopGame" type="button" class="btn btn-danger btn-block">Stop Game</button>
 	</div>
 	
-	<table class="table table-striped" id="scoreBoard">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Score</th>
-      </tr>
-    </thead>
-    <tbody id="playersList">
-    </tbody>
-	</table>
+	
   </div>
   
   
