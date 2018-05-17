@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Bootstrap Example</title>
+  <title>Buzzer</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
@@ -15,7 +15,7 @@ $(document).ready(function(){
 	var myName='';
 	var players={};
 	var questions={};
-	var myQuestionId='';
+	var distance = 20;
 	$('#scoreBoard').hide();
 	$('#hitBuzzer').hide();
 	$("#1a").hide();
@@ -28,7 +28,6 @@ $(document).ready(function(){
 		}
 		$("#name").text(myName);// + "<br>Player<br>";
 		$("#role").text("Player");
-		//debugger;
 		$("#input").hide();
 		$("#options").hide();
 		$("#1a").show();
@@ -39,26 +38,24 @@ $(document).ready(function(){
 			alert("Name can not be blank");
 			return ;
 		}
-		$("#name").text(myName);// + "<br>Player<br>";
-		$("#role").text("Player");
-		//debugger;
+		$("#name").text(myName);
+		$("#role").text("Organizer");
 		$("#input").hide();
 		$("#options").hide();
 		$("#2a").show();
-		$.post("http://localhost:3000/startGame/"+myName, function(data){
+		$.post("/startGame/"+myName, function(data){
 			thisGame=data;
 			console.log(thisGame);			
 		});
 	});
     //debugger;	
-	$.get("http://localhost:3000/", function(data){
+	$.get("/gameStatus", function(data){
 		myGames=data;
 		$.each(data, function(key, value) {
 			$("#gameList").append("<li class='list-group-item'><button id='"+key
 				+"' class='btn btn-primary btn-block games'>" + value.organizer 
 				//+ "_" + value.started 
 				+"</button></li>");
-				myGameId=key;
 				players = value.players;
 				questions = value.questions;
 		});
@@ -85,14 +82,15 @@ $(document).ready(function(){
 		$('#scoreBoard').show();
 		$('#hitBuzzer').show();
 		$('#gameList').hide();
+		myGameId =event.srcElement.id;
 		refreshScoreBoard();
-		$.post("http://localhost:3000/joinGame/"+myGameId+"/"+myName, function(data){
+		$.post("/joinGame/"+myGameId+"/"+myName, function(data){
 			console.log('msg posted');
 		});
 	}
 	$("#hitBuzzer").click(function(){
 		
-		$.post("http://localhost:3000/hitBuzzer/"+myGameId+"/"+myName+"/"+Object.keys(questions).length, function(data){
+		$.post("/hitBuzzer/"+myGameId+"/"+myName+"/"+Object.keys(questions).length, function(data){
 			console.log('refresh data');
 			myGames=data;
 			$.each(data, function(key, value) {
@@ -102,31 +100,29 @@ $(document).ready(function(){
 			refreshScoreBoard();
 		});
 	});
+	// Update the count down every 1 second
+	function setTimer(){
+		var x = setInterval(function() {
+			// Output the result in an element with id="demo"
+			document.getElementById("demo").innerHTML = distance-- + "s"  ;
+			// If the count down is over, write some text 
+			if (distance < 0) {
+				clearInterval(x);
+				document.getElementById("demo").innerHTML = "Time Up!!";
+			}
+		}, 1000);
+	}
 	$("#startQuiz").click(function(){
+		distance =20;
 		setTimer();
-		$.post("http://localhost:3000/startQuiz/"+Object.keys(thisGame)[0], function(data){
+		$.post("/startQuiz/"+Object.keys(thisGame)[0], function(data){
 			players = data;
 			refreshScoreBoard();
 		});
-	});
-	
-	
+	});	
 });
 
-//Other Global functions
-var distance = 20;
-// Update the count down every 1 second
-function setTimer(){
-	var x = setInterval(function() {
-		// Output the result in an element with id="demo"
-		document.getElementById("demo").innerHTML = distance-- + "s"  ;
-		// If the count down is over, write some text 
-		if (distance < 0) {
-			clearInterval(x);
-			document.getElementById("demo").innerHTML = "Time Up!!";
-		}
-	}, 1000);
-}
+
 </script>
 <style>
 .timer {
@@ -134,19 +130,40 @@ function setTimer(){
 	text-align: center;
 	margin: 10px;
 }
+
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+}
+
+body {
+    /* The image used */
+    background-image: url("Buzzer-Red-Hand.jpg");
+
+    /* Full height */
+    height: 100%; 
+
+    /* Center and scale the image nicely */
+    //background-position: center;
+    background-repeat: no-repeat;
+    background-size: 100vw 100vh;
+}
 </style>
 </head>
-<body>
+<body class="bg">
 
-<div class="container col-xs-12">
-  <h3>Tabs</h3>
+<div class="container col-xs-12 bg">
+  <h3 style="text-align: center;">Buzzer</h3>
+  <p style="text-align: center;">This buzzer application would be useful in party games where we need a buzzer to decide which team to go first. We use a person to decide that and the openion is subjective and not accurate when it comes to millisecond difference in response.</p>
   <div class="row col-xs-12">
 	  <div id="input" class="form-group col-xs-12">
 		<label for="myName">Name :</label>
 		<input type="text" class="form-control" id="myName" required>
 	  </div>
 	  <div id="output" style="text-align: right; float:right">
-		<br>
 		<div id="name"></div>
 		<div id="role"></div>
 		<br>
@@ -193,11 +210,8 @@ function setTimer(){
 		<button id="stopGame" type="button" class="btn btn-danger btn-block">Stop Game</button>
 	</div>
 	
-	
   </div>
-  
-  
+  <div class="footer">Dhruv Tech</div>
 </div>
-
 </body>
 </html>
