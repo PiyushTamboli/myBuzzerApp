@@ -1,5 +1,6 @@
 const express = require('express')
 var bodyParser = require("body-parser");
+var path    = require("path");
 
 const app = express()
 const PORT = process.env.PORT || 3000;
@@ -9,6 +10,7 @@ app.use(bodyParser.urlencoded({
 }));
 
 app.use(bodyParser.json());
+app.use(express.static('public'));
 
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
@@ -37,9 +39,14 @@ var games = {
     }
 }
 
-app.get('/', function(req, res) {
+app.get('/gameStatus', function(req, res) {
     res.json(games)
 })
+
+app.get('/', function(req, res) {
+    res.sendFile(path.join(__dirname+'/index.html'));
+})
+
 
 app.post('/joinGame/:gameId/:playerId', function(req, res) {
     console.log(req.params.gameId);
@@ -77,16 +84,5 @@ app.post('/stopGame/:gameId', function(req, res) {
     res.json(games);
 })
 
-app.post('/initGame', function(req, res) {
-   if (req.body.role == 'Organizer' && organizer == '') {
-        organizer = req.body.firstName;
-    } else {
-        players[req.body.firstName] = 0;
-    }
-    res.json({
-        'organizer': organizer,
-        'players': players
-    })
-});
 
 app.listen(PORT, () => console.log('Example app listening on port ' + PORT))
